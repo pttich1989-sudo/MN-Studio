@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { contentType, projectType, designStyle, keywords } = req.body;
+    const { contentType, projectType, designStyle, keywords, imageLink } = req.body;
 
     const API_KEY = process.env.GEMINI_API_KEY;
     if (!API_KEY) {
@@ -30,6 +30,7 @@ Hãy viết một nội dung với các yêu cầu sau:
 - Loại dự án/không gian: ${projectType}
 - Phong cách thiết kế: ${designStyle}
 - Thông tin thêm/Từ khóa: ${keywords || "Nhấn mạnh vào thiết kế tinh tế và trải nghiệm sống đẳng cấp."}
+${imageLink ? `\n[YÊU CẦU QUAN TRỌNG]: Hãy chèn đường link hình ảnh này (${imageLink}) vào vị trí phù hợp nhất trong bài viết bằng cú pháp Markdown (ví dụ: ![Hình ảnh minh họa](${imageLink})).` : ""}
 
 Hãy đóng vai chuyên gia của PS Interior Design để hoàn thiện bài viết ngay lập tức. Cung cấp kết quả bằng định dạng Markdown (để hiển thị đẹp trên HTML). Không cần giải thích thêm.
 `;

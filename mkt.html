@@ -350,6 +350,11 @@
                 </div>
 
                 <div class="form-group" style="flex:1">
+                    <label>Link hình ảnh (Tùy chọn)</label>
+                    <input type="url" id="imageLink" placeholder="Ví dụ: https://noithatps.vn/anh1.jpg">
+                </div>
+
+                <div class="form-group" style="flex:1">
                     <label>Từ khóa / Ý chính (Tùy chọn)</label>
                     <textarea id="keywords" placeholder="Ví dụ: Dự án Diamond Centery, 120m2, gỗ óc chó, thiết kế tối ưu đón ánh sáng tự nhiên, hợp mệnh Kim..."></textarea>
                 </div>
@@ -398,6 +403,7 @@
             const projectType = document.getElementById('projectType').value;
             const designStyle = document.getElementById('designStyle').value;
             const keywords = document.getElementById('keywords').value;
+            const imageLink = document.getElementById('imageLink').value;
 
             // Xử lý Giao diện lúc đợi
             btn.disabled = true;
@@ -414,7 +420,8 @@
                         contentType,
                         projectType,
                         designStyle,
-                        keywords
+                        keywords,
+                        imageLink
                     })
                 });
 
