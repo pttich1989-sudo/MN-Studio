@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { contentType, projectType, designStyle, keywords, imageLink } = req.body;
+    const { contentType, projectType, designStyle, keywords, imageLink, imageBase64 } = req.body;
 
     const API_KEY = process.env.GEMINI_API_KEY;
     if (!API_KEY) {
@@ -22,6 +22,9 @@ Giọng văn bắt buộc:
 3. Tôn trọng yếu tố phong thủy (ví dụ: đón ánh sáng tự nhiên, vượng khí) nếu phù hợp.
 4. Trình bày rõ ràng, phân đoạn chuẩn Markdown, sử dụng ký tự đặc biệt (bullet points) một cách tinh tế.
 `;
+    
+    // Check if imageLink is an actual URL or just the placeholder text "Đã dán ảnh từ Clipboard!"
+    const isUrl = imageLink && imageLink.startsWith('http');
 
     // Biến đổi prompt từ user input
     const userPrompt = `
@@ -30,13 +33,28 @@ Hãy viết một nội dung với các yêu cầu sau:
 - Loại dự án/không gian: ${projectType}
 - Phong cách thiết kế: ${designStyle}
 - Thông tin thêm/Từ khóa: ${keywords || "Nhấn mạnh vào thiết kế tinh tế và trải nghiệm sống đẳng cấp."}
-${imageLink ? `\n[YÊU CẦU QUAN TRỌNG]: Hãy chèn đường link hình ảnh này (${imageLink}) vào vị trí phù hợp nhất trong bài viết bằng cú pháp Markdown (ví dụ: ![Hình ảnh minh họa](${imageLink})).` : ""}
+${isUrl ? `\n[YÊU CẦU ĐÍNH KÈM]: Hãy chèn đường link url ảnh này (${imageLink}) vào vị trí phù hợp nhất trong bài viết bằng cú pháp Markdown (ví dụ: ![Hình ảnh thiết kế](${imageLink})).` : ""}
+${imageBase64 ? `\n[YÊU CẦU PHÂN TÍCH ẢNH]: Tôi có đính kèm một bức hình liên quan đến thiết kế nội thất. Hãy quan sát thật kỹ bức hình đó (chú ý vật liệu, tông màu, ánh sáng, đường nét kỹ thuật) và lồng ghép sự miêu tả sinh động, chân thực dựa trên hình ảnh đó vào trong bài viết. Điều này giúp bài content thuyết phục và cá nhân hóa hơn.` : ""}
 
-Hãy đóng vai chuyên gia của PS Interior Design để hoàn thiện bài viết ngay lập tức. Cung cấp kết quả bằng định dạng Markdown (để hiển thị đẹp trên HTML). Không cần giải thích thêm.
+Hãy đóng vai chuyên gia của PS Interior Design để hoàn thiện bài viết ngay lập tức. Cung cấp kết quả bằng định dạng Markdown. Không cần giải thích thêm.
 `;
 
-    // Gọi Gemini API (Sử dụng model gemini-1.5-flash do tốc độ nhanh, giá rẻ, văn phong xuất sắc)
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${API_KEY}`, {
+    // Chuẩn bị payload truyền vào Gemini
+    const parts = [{ text: userPrompt }];
+    if (imageBase64) {
+        // Parse "data:image/jpeg;base64,....."
+        const [header, baseData] = imageBase64.split(',');
+        const mimeType = header.split(':')[1].split(';')[0];
+        parts.push({
+            inline_data: {
+                mime_type: mimeType,
+                data: baseData
+            }
+        });
+    }
+
+    // Gọi Gemini API (Sử dụng model gemini-1.5-pro để có tầm nhìn Vision tốt)
+    const response = await fetch(\`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=\${API_KEY}\`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -45,12 +63,10 @@ Hãy đóng vai chuyên gia của PS Interior Design để hoàn thiện bài vi
         system_instruction: {
           parts: [{ text: systemInstruction }]
         },
-        contents: [{
-          parts: [{ text: userPrompt }]
-        }],
+        contents: [{ parts: parts }],
         generationConfig: {
           temperature: 0.7, // Tương đối sáng tạo nhưng vẫn giữ sự nghiêm túc
-          maxOutputTokens: 1500,
+          maxOutputTokens: 2500,
         }
       })
     });
